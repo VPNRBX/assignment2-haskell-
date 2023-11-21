@@ -1,10 +1,9 @@
-  -- Do not alter the following line
+-- Do not alter the following line
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use camelCase" #-}
 module Assignment2 (transaction_to_string, trade_report_list, stock_test, get_trades, trade_report, update_money, profit, profit_report, complex_profit_report) where
 import Distribution.Compat.Lens (_1)
 import Data.IntMap (update)
-
 
 type Transaction = (Char, Int, Int, String, Int)
 
@@ -17,10 +16,7 @@ test_log = [('B', 100, 1104,  "VTI",  1),
             ('S', 200,   32, "ONEQ", 11),
             ('S', 100,  210, "IWRD", 12)
             ]
-
-
 -- Part A
-
 
 transaction_to_string :: Transaction -> String
 transaction_to_string (action, unit, price, stock, day)
@@ -47,10 +43,7 @@ get_trades stock_to_check = filter (\(_, _, _, stock, _) -> stock == stock_to_ch
 trade_report :: String -> [Transaction] -> String
 trade_report stock_to_check transaction = unlines (trade_report_list (get_trades stock_to_check transaction))
 
-
-
 -- Part B
-
 
 update_money :: Transaction -> Int -> Int
 update_money (action, units, price, _, _) current_money
@@ -68,10 +61,7 @@ profit_report stock_to_check transaction = unlines (map (profit_report_helper tr
 
 -- Part C
 
-
 test_str_log = "BUY 100 VTI 1\nBUY 200 ONEQ 3\nBUY 50 VTI 5\nSELL 150 VTI 9\nBUY 100 IWRD 10\nSELL 200 ONEQ 11\nSELL 100 IWRD 12\n"
-
-
 
 type Prices = [(String, [Int])]
 
@@ -82,9 +72,24 @@ test_prices = [
                 ("IWRD", [207, 211, 213, 221, 221, 222, 221, 218, 226, 234, 229, 229, 228, 222, 218, 223, 222, 218, 214])
               ]
 
+split_transactions :: String -> [[String]]
+split_transactions log = map words (lines log)
 
+get_transactions transaction stock = filter(\transaction -> length transaction >= 3 && transaction !! 2 == stock) transaction
+calculate_single transactionLog (stock, price) =
+  let transactions = split_transactions transactionLog
+      gathered = get_transactions transactions stock
+      profit = calculate_gross gathered price
+  in stock ++ ": " ++ show profit
+
+calculate_gross [] _ = 0
+calculate_gross transactions price =
+  let buy = filter (\x -> head x == "BUY") transactions
+      sell = filter (\x -> head x == "SELL") transactions
+      b_amount = sum [read (x !! 1) * price !! (read (x !! 3) - 1) | x <- buy]
+      s_amount = sum [read (x !! 1) * price !! (read (x !! 3) - 1) | x <- sell]
+  in s_amount - b_amount
 
 complex_profit_report :: String -> Prices -> String
-complex_profit_report = error "Not implemented"
-
-
+complex_profit_report transactions prices =
+  unlines (map (calculate_single transactions) prices)
