@@ -76,6 +76,7 @@ split_transactions :: String -> [[String]]
 split_transactions log = map words (lines log)
 
 get_transactions transaction stock = filter(\transaction -> length transaction >= 3 && transaction !! 2 == stock) transaction
+
 calculate_single transactionLog (stock, price) =
   let transactions = split_transactions transactionLog
       gathered = get_transactions transactions stock
